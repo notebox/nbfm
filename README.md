@@ -23,3 +23,7 @@ wails dev
 m > n (new note)
 ?     (open manual)
 ```
+
+## Demo Screenshots
+<img src="https://github.com/notebox/nbfm/assets/8125241/ba0a6f6f-2c3c-4582-ada0-12c05a5f4922" width=256 /><img src="https://github.com/notebox/nbfm/assets/8125241/e6bd15d8-155e-4345-812b-1cc258571d9f" width=256 /> <img src="https://github.com/notebox/nbfm/assets/8125241/f632f59b-31e5-4114-96fa-fad4accc852c" width=256 />
+<img src="https://github.com/notebox/nbfm/assets/8125241/b4e7c5ff-3da3-4aca-9cd4-75b2027470f3" width=256 /> <img src="https://github.com/notebox/nbfm/assets/8125241/c0e5ecde-4714-4563-90b3-566a7b7e57e6" width=256 /> <img src="https://github.com/notebox/nbfm/assets/8125241/0804ee64-a3d6-40b1-80e4-58530b8eb1ce" width=256 />
