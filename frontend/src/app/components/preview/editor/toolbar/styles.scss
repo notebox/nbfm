@@ -1,0 +1,24 @@
+.nb-editor-sub-selector {
+  background-color: black;
+  min-width: 100px;
+  min-height: 100px;
+
+  position: absolute;
+  top: 2em;
+
+  .ui-item {
+    padding: 0.25rem 0.5rem;
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    cursor: pointer;
+    &:hover {
+      color: var(--accent-color);
+    }
+
+    div:nth-child(2) {
+      color: gray;
+    }
+    border: 1px solid gray;
+  }
+}

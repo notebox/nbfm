@@ -1,0 +1,45 @@
+.ui-node-menu {
+  header {
+    background-color: var(--accent-color);
+    color: black;
+  }
+  .ui-option {
+    padding: 2px;
+
+    display: flex;
+    user-select: none;
+    cursor: pointer;
+
+    .ui-selected {
+      width: 1.5em;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .ui-shortcut {
+      color: var(--accent-color);
+    }
+
+    &:last-child {
+      margin-bottom: .5rem;
+    }
+  }
+  .ui-content {
+    padding: .5rem 1rem;
+    &.ui-for-delete {
+      gap: .5rem;
+      input {
+        margin-left: 1rem;
+      }
+    }
+    .ui-confirm {
+      display: flex;
+      input {
+        flex: 1;
+        &::after {
+          content: '.note';
+        }
+      }
+    }
+  }
+}

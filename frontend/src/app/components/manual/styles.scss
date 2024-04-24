@@ -1,0 +1,91 @@
+@keyframes blink-effect {
+  50% {
+    opacity: 0.5;
+  }
+}
+
+#ui-manual-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  display: flex;
+
+  background-color: rgba(0, 0, 0, 0.1);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+  padding: 2rem;
+  gap: 2rem;
+
+  #ui-dismiss {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.5em;
+    animation: blink-effect 3s ease-in-out infinite;
+  }
+}
+
+#ui-manual {
+  flex: 1;
+  background-color: rgba(0, 0, 0, 0.5);
+  box-shadow: 0 0 3rem rgba(0, 0, 0, 1);
+  padding: 1rem;
+
+  font-family: var(--font-family);
+  overflow: auto;
+
+  h1 b {
+    font-weight: 900;
+  }
+
+  .ui-body {
+    font-family: var(--monospaced-font-family);
+    display: grid;
+    grid-template-columns: auto 1fr;
+    row-gap: .5rem;
+
+    dt, dd {
+      span {
+        color: var(--accent-color);
+      }
+    }
+    dt {
+      display: flex;
+      span:first-child {
+        flex: 1;
+        text-align: center;
+      }
+
+      &::after {
+        content: ":";
+        margin-left: .5rem;
+      }
+    }
+
+    div.ui-not-yet {
+      display: contents;
+
+      dt, dd {
+        opacity: .5;
+      }
+      dd {
+        span {
+          color: red;
+        }
+      }
+    }
+
+    dd {
+      .ui-content {
+        margin-top: 0.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+      }
+    }
+  }
+}

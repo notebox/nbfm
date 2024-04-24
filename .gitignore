@@ -1,0 +1,45 @@
+build/bin
+node_modules
+frontend/dist
+demo.note
+nbfm.log
+
+# dependencies
+/node_modules
+
+# testing
+/coverage
+
+# production
+/dist
+
+# editor
+.idea
+.vscode
+*.code-workspace
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.svd
+*.userprefs
+*.csproj
+*.pidb
+*.user
+*.unityproj
+*.booproj
+ExportedObj/
+*.xcuserstate
+
+# misc
+.DS_Store
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.eslintcache
+
+# log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

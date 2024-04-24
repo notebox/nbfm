@@ -1,0 +1,10 @@
+html {
+    background-color: black;
+    color: white;
+}
+
+body {
+    margin: 0;
+    color: white;
+    font-family: var(--monospaced-font-family);
+}

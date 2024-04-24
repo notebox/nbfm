@@ -1,0 +1,39 @@
+footer {
+  grid-area: footer;
+  display: flex;
+  flex-direction: column;
+
+  .ui-status {
+    padding: 0.5rem 1rem;
+    display: flex;
+    gap: 1rem;
+    .ui-mode {
+      color: rgb(84, 174, 255);
+    }
+    .ui-idx {
+      flex: 1;
+      text-align: right;
+    }
+  }
+
+  .ui-search {
+    padding: 0.5rem 1rem;
+    display: flex;
+    align-items: flex-start;
+    div {
+      user-select: none;
+    }
+  }
+
+  input {
+    font-family: var(--monospaced-font-family);
+    background: transparent;
+    color: white;
+    outline: none;
+    padding: 0px;
+    margin: 0px;
+    border: 0px;
+    font-size: 1em;
+    line-height: 1em;
+  }
+}

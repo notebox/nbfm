@@ -1,0 +1,60 @@
+@mixin ui-item-color($r, $g, $b) {
+  &[data-selected="false"] {
+      &[data-hidden="false"] {
+          color: rgba($r, $g, $b);
+      }
+      &[data-hidden="true"] {
+          color: rgba($r, $g, $b, 0.5);
+      }
+  }
+  &[data-selected="true"] {
+      color: black;
+      background-color: rgba($r, $g, $b);
+      border-bottom: 1px solid rgb($r, $g, $b);
+  }
+}
+
+.ui-dir {
+  height: 100%;
+  min-height: 0;
+  overflow-y: auto; 
+  overflow-x: hidden;
+}
+
+.ui-item {
+  padding: 1px 1px 0 1px;
+  border-bottom: 1px solid black;
+  word-break: keep-all;
+
+  &[data-dir="false"] {
+      @include ui-item-color(255, 255, 255);
+  }
+  &[data-dir="true"] {
+      @include ui-item-color(84, 174, 255);
+  }
+  &[data-editable="true"] {
+    @include ui-item-color(243, 161, 0);
+}
+  cursor: default;
+}
+
+#layout-right {
+  .ui-item[data-selected="true"] {
+    background-color: black;
+    &[data-dir="false"] {
+      $color: rgb(255, 255, 255);
+      color: $color;
+      border-bottom: 1px solid $color;
+    }
+    &[data-dir="true"] {
+      $color: rgb(84, 174, 255);
+      color: $color;
+      border-bottom: 1px solid $color;
+    }
+    &[data-editable="true"] {
+      $color: rgb(243, 161, 0);
+      color: $color;
+      border-bottom: 1px solid $color;
+    }
+  }
+}
