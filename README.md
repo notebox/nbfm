@@ -6,7 +6,9 @@
 [![codecov - code coverage](https://img.shields.io/codecov/c/github/notebox/nbfm.svg?style=flat-square)](https://codecov.io/gh/notebox/nbfm)
 [![sponsor](https://img.shields.io/static/v1?label=Sponsor&message=%E2%9D%A4&logo=GitHub&color=%23fe8e86)](https://github.com/sponsors/notebox)
 
-[nb-editor](https://github.com/notebox/nb-editor) that enables CRDT synchronization and collaboration using a shared folder without a server + File manager (inspired by [LF](https://github.com/gokcehan/lf))
+File manager + CRDT Note Editor
+- File manager (inspired by [LF](https://github.com/gokcehan/lf))
+- [nb-editor](https://github.com/notebox/nb-editor) enables [nb-crdt](https://github.com/notebox/nb-crdt)([nb-crdt-go](https://github.com/notebox/nb-crdt-go)) synchronization and collaboration just through a shared folder, eliminating the need for a server.
 
 ## Development
 
