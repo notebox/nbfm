@@ -38,12 +38,12 @@ type Note struct {
 }
 type Blocks map[common.BlockID]*SynchronizedBlock
 
-func NewNote(path string, replicaID common.ReplicaID, interval time.Duration) (*Note, error) {
+func NewNote(db *sql.DB, replicaID common.ReplicaID, path string, interval time.Duration) (*Note, error) {
 	noteID, err := readNoteID(path)
 	if err != nil {
 		return nil, err
 	}
-	err = nav.NewNoteBlockIfNeeded(path, noteID.String())
+	err = nav.NewNoteBlockIfNeeded(db, path, noteID.String())
 	if err != nil {
 		return nil, err
 	}
@@ -93,30 +93,30 @@ func (note *Note) Contribute(ctx context.Context, bytes []byte) error {
 		return err
 	}
 	db := ctx.Value(identifier.DB).(*sql.DB)
-	blockIDs, err := local.Insert(db, &note.ID, ctrbs)
+	blockIDs, err := local.InsertCTRBs(db, &note.ID, ctrbs)
 	if err != nil {
 		return err
 	}
+
+	updated := make(map[common.BlockID]bool)
+
 	for _, ctrb := range ctrbs {
 		sb, ok := note.blocks[ctrb.BlockID]
 		if !ok {
 			blockPath := filepath.Join(note.path, "blocks", ctrb.BlockID.String())
-			err := os.MkdirAll(blockPath, 0777)
+			sb, err = NewUnSynchronizedBlock(blockPath, ctrb.Operations.BINS)
 			if err != nil {
 				return err
 			}
-			sb, err = NewEmptySynchronizedBlock(blockPath)
-			if err != nil {
-				return err
-			}
-			sb.block = ctrb.Operations.BINS
 			note.blocks[ctrb.BlockID] = sb
 		}
 		err := sb.Apply(*ctrb)
 		if err != nil {
 			return err
 		}
+		updated[ctrb.BlockID] = true
 	}
+
 	return note.flagSync(ctx, blockIDs, false)
 }
 
@@ -138,10 +138,10 @@ func (note *Note) flagSync(ctx context.Context, blockIDs []*uuid.UUID, isFS bool
 			}
 			note.blocks[*blockID] = sb
 		}
-		if isFS && !sb.toReadFile {
-			sb.toReadFile = true
+		if isFS && !sb.fromFile {
+			sb.fromFile = true
 		}
-		sb.toSyncFile = true
+		sb.toFile = true
 	}
 
 	note.wg.Add(note.dt.Add(func() {
@@ -154,7 +154,7 @@ func (note *Note) flagSync(ctx context.Context, blockIDs []*uuid.UUID, isFS bool
 func (note *Note) sync(ctx context.Context) {
 	db := ctx.Value(identifier.DB).(*sql.DB)
 	for blockID, sb := range note.blocks {
-		if !sb.toSyncFile {
+		if !sb.toFile && !sb.fromFile {
 			continue
 		}
 		block, err := sb.Sync(db, note)
@@ -206,6 +206,7 @@ func readBlocks(path string) (Blocks, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	var wg sync.WaitGroup
 	var mutex sync.Mutex
 	blocks := make(Blocks)
@@ -224,11 +225,13 @@ func readBlocks(path string) (Blocks, error) {
 			}
 			sb.fname = fname
 			sb.block = block
+			sb.fromFile = true
 			mutex.Lock()
 			blocks[sb.block.BlockID] = sb
 			mutex.Unlock()
 		}(bid)
 	}
 	wg.Wait()
+
 	return blocks, nil
 }

@@ -16,12 +16,12 @@ import (
 
 type SynchronizedBlock struct {
 	sync.Mutex
-	blockPath  string
-	fname      string
-	block      *block.Block
-	changed    bool
-	toSyncFile bool
-	toReadFile bool
+	blockPath string
+	fname     string
+	block     *block.Block
+	changed   bool
+	toFile    bool
+	fromFile  bool
 }
 
 func NewEmptySynchronizedBlock(blockPath string) (*SynchronizedBlock, error) {
@@ -32,17 +32,36 @@ func NewEmptySynchronizedBlock(blockPath string) (*SynchronizedBlock, error) {
 	return &SynchronizedBlock{blockPath: blockPath}, nil
 }
 
+func NewUnSynchronizedBlock(blockPath string, block *block.Block) (*SynchronizedBlock, error) {
+	err := os.MkdirAll(blockPath, 0777)
+	if err != nil {
+		return nil, err
+	}
+	sb, err := NewEmptySynchronizedBlock(blockPath)
+	if err != nil {
+		return nil, err
+	}
+	sb.block = block
+	sb.toFile = true
+	return sb, nil
+}
+
 func (sb *SynchronizedBlock) Sync(db *sql.DB, note *Note) (*block.Block, error) {
 	sb.Lock()
 	defer sb.Unlock()
 
-	if !sb.toReadFile {
+	if !sb.fromFile {
 		err := sb.write()
 		if err != nil {
 			return nil, err
 		}
-		sb.toSyncFile = false
+		sb.toFile = false
 		return nil, nil
+	}
+
+	err := local.InsertBlock(db, &note.ID, sb.block)
+	if err != nil {
+		return nil, err
 	}
 
 	fname, err := latestFileName(sb.blockPath)
@@ -57,8 +76,8 @@ func (sb *SynchronizedBlock) Sync(db *sql.DB, note *Note) (*block.Block, error) 
 				return nil, err
 			}
 		}
-		sb.toReadFile = false
-		sb.toSyncFile = false
+		sb.fromFile = false
+		sb.toFile = false
 		sb.changed = false
 		return nil, nil
 	}
@@ -79,8 +98,8 @@ func (sb *SynchronizedBlock) Sync(db *sql.DB, note *Note) (*block.Block, error) 
 		if err != nil {
 			return nil, err
 		}
-		sb.toReadFile = false
-		sb.toSyncFile = false
+		sb.fromFile = false
+		sb.toFile = false
 		sb.changed = false
 	}
 

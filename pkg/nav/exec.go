@@ -1,6 +1,7 @@
 package nav
 
 import (
+	"database/sql"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -9,6 +10,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/notebox/nbfm/pkg/config"
+	local "github.com/notebox/nbfm/pkg/local/note"
 )
 
 func DeleteFile(path string) error {
@@ -27,7 +29,7 @@ func AddFile(path string) error {
 			return err
 		}
 		noteIDStr := noteID.String()
-		err = NewNoteBlockIfNeeded(path, noteIDStr)
+		err = NewNoteBlockIfNeeded(nil, path, noteIDStr)
 		if err != nil {
 			return err
 		}
@@ -65,7 +67,7 @@ func MoveFile(src, dst string) error {
 	return sysMoveFile(src, dst)
 }
 
-func NewNoteBlockIfNeeded(path, noteIDStr string) error {
+func NewNoteBlockIfNeeded(db *sql.DB, path, noteIDStr string) error {
 	noteBlockPath := filepath.Join(path, "blocks", noteIDStr, NewBlockFileName())
 	dirPath := filepath.Dir(noteBlockPath)
 	if _, err := os.Stat(dirPath); !os.IsNotExist(err) {
@@ -76,7 +78,23 @@ func NewNoteBlockIfNeeded(path, noteIDStr string) error {
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(noteBlockPath, []byte(fmt.Sprintf(`["%s",{},[[0,0,1]],{"TYPE":[null,"NOTE"]},false,[]]`, noteIDStr)), 0777)
+
+	noteID, err := uuid.Parse(noteIDStr)
+	if err != nil {
+		return err
+	}
+	var data []byte
+	if db != nil {
+		data, err = local.SelectBlockData(db, &noteID, &noteID)
+		if err != nil {
+			return err
+		}
+	}
+	if data == nil {
+		data = []byte(fmt.Sprintf(`["%s",{},[[0,0,1]],{"TYPE":[null,"NOTE"]},false,[]]`, noteIDStr))
+	}
+
+	return os.WriteFile(noteBlockPath, data, 0777)
 }
 
 func NewBlockFileName() string {

@@ -35,6 +35,13 @@ func Prepare(db *sql.DB, path string) error {
 		);
 		CREATE INDEX IF NOT EXISTS idx_nb_note_ctrbs_ids ON nb_note_ctrbs (note_id, block_id);
 		CREATE INDEX IF NOT EXISTS idx_nb_note_ctrbs_block_nonce ON nb_note_ctrbs (block_nonce);
+		CREATE TABLE IF NOT EXISTS nb_note_blocks (
+			note_id TEXT NOT NULL,
+			block_id TEXT NOT NULL,
+			data BLOB NOT NULL,
+			UNIQUE (note_id, block_id)
+		);
+		CREATE INDEX IF NOT EXISTS idx_nb_note_blocks_ids ON nb_note_blocks (note_id, block_id);
 	`)
 	return err
 }
@@ -48,7 +55,7 @@ func isInstalled(db *sql.DB) (bool, error) {
 	return rows.Next(), nil
 }
 
-func Insert(db *sql.DB, noteID *uuid.UUID, contributions []*block.Contribution) ([]*uuid.UUID, error) {
+func InsertCTRBs(db *sql.DB, noteID *uuid.UUID, contributions []*block.Contribution) ([]*uuid.UUID, error) {
 	var blockIDs []*uuid.UUID
 	q := "INSERT INTO nb_note_ctrbs (note_id, block_id, block_nonce, text_nonce, replica_id, timestamp, ops) VALUES"
 	v := []any{}
@@ -70,6 +77,65 @@ func Insert(db *sql.DB, noteID *uuid.UUID, contributions []*block.Contribution) 
 	_, err = stmt.Exec(v...)
 
 	return blockIDs, err
+}
+
+func InsertBlock(db *sql.DB, noteID *uuid.UUID, block *block.Block) error {
+	data, err := json.Marshal(block)
+	if err != nil {
+		return err
+	}
+	_, err = db.Exec("INSERT OR REPLACE INTO nb_note_blocks (note_id, block_id, data) VALUES (?, ?, ?)", noteID, block.BlockID, data)
+	return err
+}
+
+func SelectBlockData(db *sql.DB, noteID *uuid.UUID, blockID *uuid.UUID) ([]byte, error) {
+	rows, err := db.Query("SELECT data FROM nb_note_blocks WHERE note_id = ? AND block_id LIMIT 1", noteID, blockID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var data []byte
+		err := rows.Scan(&data)
+		if err != nil {
+			return nil, err
+		}
+		return data, nil
+	}
+	return nil, nil
+}
+
+func SelectBlocks(db *sql.DB, noteID *uuid.UUID) ([]*block.Block, error) {
+	var blocks []*block.Block
+
+	rows, err := db.Query("SELECT data FROM nb_note_blocks WHERE note_id = ?", noteID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return blocks, nil
+		}
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var data []byte
+		err := rows.Scan(&data)
+		if err != nil {
+			return nil, err
+		}
+		var b block.Block
+		err = json.Unmarshal(data, &b)
+		if err != nil {
+			return nil, err
+		}
+		blocks = append(blocks, &b)
+	}
+
+	return blocks, nil
 }
 
 func SelectAllAfter(db *sql.DB, replicaID uint32, noteID *uuid.UUID, blockID *uuid.UUID, blockNonce common.Nonce, textNonce common.Nonce) ([]*block.Contribution, error) {

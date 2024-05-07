@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -15,6 +16,7 @@ import (
 	"github.com/notebox/nb-crdt-go/common"
 	"github.com/notebox/nbfm/pkg/config"
 	"github.com/notebox/nbfm/pkg/identifier"
+	local "github.com/notebox/nbfm/pkg/local/note"
 )
 
 type Path = string
@@ -42,7 +44,9 @@ func (pool *Pool) Open(ctx context.Context, path string) (*Note, error) {
 	if ok {
 		note.wg.Add(1)
 	} else {
-		note, err = NewNote(path, ctx.Value(identifier.ReplicaID).(uint32), pool.syncInterval)
+		db := ctx.Value(identifier.DB).(*sql.DB)
+		replicaID := ctx.Value(identifier.ReplicaID).(common.ReplicaID)
+		note, err = NewNote(db, replicaID, path, pool.syncInterval)
 		if err != nil {
 			return nil, err
 		}
@@ -50,12 +54,28 @@ func (pool *Pool) Open(ctx context.Context, path string) (*Note, error) {
 
 		note.wg = new(sync.WaitGroup)
 		note.wg.Add(1)
-		for _, sb := range note.blocks {
-			sb.toSyncFile, err = sb.update(ctx.Value(identifier.DB).(*sql.DB), note)
+
+		cached, err := local.SelectBlocks(db, &note.ID)
+		if err != nil {
+			return nil, err
+		}
+		blocksPath := filepath.Join(path, "blocks")
+		for _, b := range cached {
+			sb, ok := note.blocks[b.BlockID]
+			if ok {
+				sb.toFile, err = sb.update(db, note)
+				if err != nil {
+					return nil, err
+				}
+				continue
+			}
+			sb, err = NewUnSynchronizedBlock(filepath.Join(blocksPath, b.BlockID.String()), b)
 			if err != nil {
 				return nil, err
 			}
+			note.blocks[b.BlockID] = sb
 		}
+
 		note.wg.Add(1)
 		note.sync(ctx)
 
@@ -68,7 +88,7 @@ func (pool *Pool) Open(ctx context.Context, path string) (*Note, error) {
 		}()
 
 		go pool.watch(ctx, note)
-		err := note.watcher.AddRecursive(note.path)
+		err = note.watcher.AddRecursive(note.path)
 		if err != nil {
 			return nil, err
 		}
