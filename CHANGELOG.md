@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/notebox/nbfm/compare/v1.0.0...v1.1.0) (2024-05-07)
+
+
+### Features
+
+* **note:** add block cache ([9bd2842](https://github.com/notebox/nbfm/commit/9bd2842890c20c17b5442a2711a9e9bdec127593))
+
 ## 1.0.0 (2024-04-26)
 
 
